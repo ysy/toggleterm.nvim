@@ -126,7 +126,7 @@ I'm also going to be pretty conservative about what I add.
 
 This plugin must be explicitly enabled by using `require("toggleterm").setup{}`
 
-Setting the `open_mapping` key to use for toggling the terminal(s) will set up mappings for _normal_ mode.
+Setting the `open_mapping` key to use for toggling the terminal(s) will set up mappings for _normal_ mode. The `open_mapping` can be a key string or an array of key strings. 
 If you prefix the mapping with a number that particular terminal will be opened. Otherwise if a prefix is not set, then the last toggled terminal will be opened. In case there are multiple terminals opened they'll all be closed, and on the next mapping key they'll be restored.
 
 If you set the `insert_mappings` key to `true`, the mapping will also take effect in insert mode; similarly setting `terminal_mappings` to `true` will have the mappings take effect in the opened terminal.
@@ -161,7 +161,7 @@ require("toggleterm").setup{
       return vim.o.columns * 0.4
     end
   end,
-  open_mapping = [[<c-\>]],
+  open_mapping = [[<c-\>]], -- or { [[<c-\>]], [[<c-¥>]] } if you also use a Japanese keyboard.
   on_create = fun(t: Terminal), -- function to run when the terminal is first created
   on_open = fun(t: Terminal), -- function to run when the terminal opens
   on_close = fun(t: Terminal), -- function to run when the terminal closes
@@ -186,7 +186,8 @@ require("toggleterm").setup{
     },
   },
   shade_terminals = true, -- NOTE: this option takes priority over highlights specified so if you specify Normal highlights you should set this to false
-  shading_factor = '<number>', -- the percentage by which to lighten terminal background, default: -30 (gets multiplied by -3 if background is light)
+  shading_factor = '<number>', -- the percentage by which to lighten dark terminal background, default: -30
+  shading_ratio = '<number>', -- the ratio of shading factor for light/dark terminal background, default: -3
   start_in_insert = true,
   insert_mappings = true, -- whether or not the open mapping applies in insert mode
   terminal_mappings = true, -- whether or not the open mapping applies in the opened terminals
@@ -429,6 +430,7 @@ Each terminal can take the following arguments:
 ```lua
 Terminal:new {
   cmd = string -- command to execute when creating the terminal e.g. 'top'
+  display_name = string -- the name of the terminal
   direction = string -- the layout for the terminal, same as the main config options
   dir = string -- the directory for the terminal
   close_on_exit = bool -- close the terminal window when the process exits

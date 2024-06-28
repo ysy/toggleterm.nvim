@@ -37,12 +37,12 @@ local function setup_global_mappings()
   local mapping = config.open_mapping
   -- v:count defaults the count to 0 but if a count is passed in uses that instead
   if mapping then
-    vim.keymap.set("n", mapping, '<Cmd>execute v:count . "ToggleTerm"<CR>', {
+    utils.key_map("n", mapping, '<Cmd>execute v:count . "ToggleTerm"<CR>', {
       desc = "Toggle Terminal",
       silent = true,
     })
     if config.insert_mappings then
-      vim.keymap.set("i", mapping, "<Esc><Cmd>ToggleTerm<CR>", {
+      utils.key_map("i", mapping, "<Esc><Cmd>ToggleTerm<CR>", {
         desc = "Toggle Terminal",
         silent = true,
       })
@@ -220,12 +220,16 @@ function M.send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
   local start_line, start_col
   if selection_type == "single_line" then
     start_line, start_col = unpack(api.nvim_win_get_cursor(0))
+    -- nvim_win_get_cursor uses 0-based indexing for columns, while we use 1-based indexing
+    start_col = start_col + 1
     table.insert(lines, fn.getline(start_line))
   else
     local res = nil
     if string.match(selection_type, "visual") then
+      -- This calls vim.fn.getpos, which uses 1-based indexing for columns
       res = utils.get_line_selection("visual")
     else
+      -- This calls vim.fn.getpos, which uses 1-based indexing for columns
       res = utils.get_line_selection("motion")
     end
     start_line, start_col = unpack(res.start_pos)
@@ -240,7 +244,7 @@ function M.send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
   if not lines or not next(lines) then return end
 
   if not trim_spaces then
-    M.exec(table.concat(lines, "\n"))
+    M.exec(table.concat(lines, "\n"), id)
   else
     for _, line in ipairs(lines) do
       local l = trim_spaces and line:gsub("^%s+", ""):gsub("%s+$", "") or line
@@ -250,7 +254,8 @@ function M.send_lines_to_terminal(selection_type, trim_spaces, cmd_data)
 
   -- Jump back with the cursor where we were at the beginning of the selection
   api.nvim_set_current_win(current_window)
-  api.nvim_win_set_cursor(current_window, { start_line, start_col })
+  -- nvim_win_set_cursor() uses 0-based indexing for columns, while we use 1-based indexing
+  api.nvim_win_set_cursor(current_window, { start_line, start_col - 1 })
 end
 
 local last_toggle_sec = 0
@@ -404,7 +409,8 @@ local function select_terminal(opts)
   vim.ui.select(terminals, {
     prompt = "Please select a terminal to open (or focus): ",
     format_item = function(term) return term.id .. ": " .. term:_display_name() end,
-  }, function(term)
+  }, function(_, idx)
+    local term = terminals[idx]
     if not term then return end
     if term:is_open() then
       term:focus()
