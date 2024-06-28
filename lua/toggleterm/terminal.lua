@@ -143,6 +143,10 @@ local function setup_buffer_mappings(bufnr)
   if mapping and config.terminal_mappings then
     utils.key_map("t", mapping, "<Cmd>ToggleTerm<CR>", { buffer = bufnr, silent = true })
   end
+  utils.key_map("t", "<C-[>", "<Cmd>ToggleTermFloatPrev<CR>", { buffer = bufnr, silent = true })
+  utils.key_map("t", "<C-]>", "<Cmd>ToggleTermFloatNext<CR>", { buffer = bufnr, silent = true })
+  utils.key_map("n", "<C-[>", "<Cmd>ToggleTermFloatPrev<CR>", { buffer = bufnr, silent = true })
+  utils.key_map("n", "<C-]>", "<Cmd>ToggleTermFloatNext<CR>", { buffer = bufnr, silent = true })
 end
 
 ---@param id number terminal id
